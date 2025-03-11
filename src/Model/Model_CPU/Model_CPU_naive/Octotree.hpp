@@ -19,6 +19,13 @@ struct Boundary {
                 p.y >= y - size / 2 && p.y <= y + size / 2 &&
                  p.z >= z - size / 2 && p.z <= z + size / 2);
     };
+    void Boundary(float mass) const
+    {
+        self.x = 0;
+        self.y = 0;
+        self.z = 0;
+        self.size;
+    }
 };
 
 // Classe pour l'Octotree
@@ -26,7 +33,7 @@ class Octotree {
 private:
     static constexpr int CAPACITY = 1;
     Boundary boundary;
-    Point* body = nullptr;
+    Point body = {0, 0, 0, 0};
     bool divided = false;
     Octotree* children[8] = {nullptr};
     Point centerOfMass = {0, 0, 0, 0};
