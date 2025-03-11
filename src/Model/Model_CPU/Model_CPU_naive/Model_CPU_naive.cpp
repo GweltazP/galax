@@ -15,42 +15,13 @@ void Model_CPU_naive
 	std::fill(accelerationsy.begin(), accelerationsy.end(), 0);
 	std::fill(accelerationsz.begin(), accelerationsz.end(), 0);
 
-	for (int i = 0; i < n_particles; i++)
-	{
-		for (int j = 0; j < n_particles; j++)
-		{
-			if(i != j)
-			{
-				const float diffx = particles.x[j] - particles.x[i];
-				const float diffy = particles.y[j] - particles.y[i];
-				const float diffz = particles.z[j] - particles.z[i];
-
-				float dij = diffx * diffx + diffy * diffy + diffz * diffz;
-
-				if (dij < 1.0)
-				{
-					dij = 10.0;
-				}
-				else
-				{
-					dij = std::sqrt(dij);
-					dij = 10.0 / (dij * dij * dij);
-				}
-
-				accelerationsx[i] += diffx * dij * initstate.masses[j];
-				accelerationsy[i] += diffy * dij * initstate.masses[j];
-				accelerationsz[i] += diffz * dij * initstate.masses[j];
-			}
-		}
-	}
+	Octotree Octree = new Octotree({0, 0, 0, max(particles.x, particles.y, particles.z)}); // REGARDER COMMENT CALCULER LA TAILLE DE LA BOITE DE BARNES-HUT
 
 	for (int i = 0; i < n_particles; i++)
 	{
-		velocitiesx[i] += accelerationsx[i] * 2.0f;
-		velocitiesy[i] += accelerationsy[i] * 2.0f;
-		velocitiesz[i] += accelerationsz[i] * 2.0f;
-		particles.x[i] += velocitiesx   [i] * 0.1f;
-		particles.y[i] += velocitiesy   [i] * 0.1f;
-		particles.z[i] += velocitiesz   [i] * 0.1f;
+		Point p = new Point({particles.x[i], particles.y[i], particles.z[i], initstate.masses[i]});
+		Octree.include(p);
 	}
+	//POSSIBILITER DE PARALLÉLLISME SUR LES BOUCLE FOR, 8 THREADS POUR LE PARCOUR DE L'ARBRE/SOUS-ARBRE COMME ACCÈDE PARTIE DE MÉMOIRE NON CONCURENTE
+
 }
