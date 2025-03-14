@@ -3,8 +3,40 @@
 #include <cmath>
 #include <vector>
 #include <memory>
-#include "Model_CPU_naive.hpp"
+#include "Model_CPU_fast.hpp"
 #include <omp.h>
+
+// Structure d'un nœud de l'Octree
+struct OctreeNode {
+    float x, y, z;  // Centre de masse
+    float mass;      // Masse totale du nœud
+    float size;      // Taille de la boîte englobante
+    int particle_index; // Indice de la particule si c'est une feuille (-1 sinon)
+    std::vector<std::unique_ptr<OctreeNode>> children;
+    
+    OctreeNode(float _x, float _y, float _z, float _size)
+        : x(_x), y(_y), z(_z), size(_size), mass(0), particle_index(-1) {
+        children.resize(8, nullptr);
+    }
+};
+
+// Classe Octree
+class Octree {
+public:
+    std::unique_ptr<OctreeNode> root;
+    float theta = 0.5f; // Paramètre de précision
+    
+    Octree(float size) {
+        root = std::make_unique<OctreeNode>(0.0f, 0.0f, 0.0f, size);
+    }
+
+    void insert_particle(int index, const Particles& particles, const std::vector<float>& masses);
+    void compute_force(int index, float& ax, float& ay, float& az, const Particles& particles, const std::vector<float>& masses);
+
+private:
+    void insert_recursive(OctreeNode* node, int index, const Particles& particles, const std::vector<float>& masses);
+    void compute_force_recursive(OctreeNode* node, int index, float& ax, float& ay, float& az, const Particles& particles, const std::vector<float>& masses);
+};
 
 // Insère une particule dans l'Octree
 void Octree::insert_particle(int index, const Particles& particles, const std::vector<float>& masses) {
@@ -75,10 +107,10 @@ void Octree::compute_force_recursive(OctreeNode* node, int index, float& ax, flo
     }
 }
 
-Model_CPU_naive::Model_CPU_naive(const Initstate& initstate, Particles& particles)
+Model_CPU_fast::Model_CPU_fast(const Initstate& initstate, Particles& particles)
     : Model_CPU(initstate, particles) {}
 
-void Model_CPU_naive::step() {
+void Model_CPU_fast::step() {
 
     float max_x, max_y, max_z, min_x, min_y, min_z = 0.0;
 
